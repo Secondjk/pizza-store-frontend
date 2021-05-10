@@ -1,0 +1,23 @@
+@import "fonts/stylesheet.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body, html, #root {
+    min-height: 100vh;
+}
+
+@media (min-width: 1024px) {
+    #root {
+        background-color: rgb(249, 250, 251);
+    }
+}
+
+#root {
+    padding-bottom: 24px;
+}
+
+*, *::after, *::before {
+    font-family: Inter, sans-serif;
+}
