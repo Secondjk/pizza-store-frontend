@@ -1,6 +1,8 @@
 import { createRouter, defineRoute, param } from 'type-route';
 import { ModalStore } from 'stores';
 
+const order = defineRoute('/order');
+
 export const { RouteProvider, useRoute, routes, session } = createRouter({
   home: defineRoute('/'),
   all: defineRoute({
@@ -9,7 +11,9 @@ export const { RouteProvider, useRoute, routes, session } = createRouter({
   },
   () => '/all'
   ),
-  profile: defineRoute('/user')
+  profile: defineRoute('/user'),
+  order,
+  orderFinished: order.extend('/finished')
 });
 
 session.listen(() => ModalStore.setModal('unset'));

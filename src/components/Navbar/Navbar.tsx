@@ -1,9 +1,9 @@
 import React, { Fragment } from 'react';
-import { MenuIcon, UserIcon, XIcon } from '@heroicons/react/outline';
+import { MenuIcon, TrashIcon, UserIcon, XIcon, ShoppingCartIcon } from '@heroicons/react/outline';
 import { LogoIcon } from 'assets/icons';
-import { Menu, Transition } from '@headlessui/react';
+import { Menu, Popover, Transition } from '@headlessui/react';
 import { Disclosure } from '@headlessui/react';
-import { SearchIcon } from '@heroicons/react/solid';
+import { MinusIcon, PlusIcon, SearchIcon } from '@heroicons/react/solid';
 import { c } from 'utils/classNames';
 import { routes, useRoute } from 'router';
 import { Link } from 'type-route';
@@ -12,10 +12,13 @@ import { setModal } from 'stores/ModalStore';
 import { useStore } from 'effector-react';
 import { UserStore } from 'stores/UserStore';
 import { ProductStore } from 'stores/ProductStore';
+import { CartStore } from 'stores/CartStore';
 
 export const Navbar: React.FC = () => {
   const { isAuthorized } = useStore(UserStore);
   const { params, name } = useRoute();
+
+  const cartStore = useStore(CartStore);
 
   const links: { title: string; href: Link; type: string }[] = [
     {
@@ -39,7 +42,7 @@ export const Navbar: React.FC = () => {
 
     location.reload();
   };
-
+  console.log('123', Object.keys(cartStore.productsById).map(k => cartStore.productsById[k]));
   return (
     <Disclosure as="nav" className="bg-white shadow">
       { ({ open }) => (
@@ -81,6 +84,72 @@ export const Navbar: React.FC = () => {
                   </div>
                 </div>
               </div>
+              <div className="flex items-center z-50">
+                <Popover as="div">
+                  { ({ open }) => (
+                    <>
+                      <div className="relative">
+                        <Popover.Button className="focus:outline-none">
+                          <ShoppingCartIcon className="w-7 h-7 lg:mx-2 ml-1.5 mr-2.5 mt-1.5 text-gray-400" />
+                          <span className="absolute top-2 lg:right-1.5 right-3 selector-none inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+                            { cartStore.size }
+                          </span>
+                        </Popover.Button>
+                        <Transition show={open}
+                                    as={Fragment}
+                                    enter="transition ease-out duration-100"
+                                    enterFrom="transform opacity-0 scale-95"
+                                    enterTo="transform opacity-100 scale-100"
+                                    leave="transition ease-in duration-75"
+                                    leaveFrom="transform opacity-100 scale-100"
+                                    leaveTo="transform opacity-0 scale-95">
+                          <Popover.Panel static className="divide-y divide-gray-200 px-2 origin-top-right absolute right-0 mt-2 min-w-72 rounded-md shadow-lg py-1 pb-2 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            { cartStore.size > 0 ?
+                              Object.keys(cartStore.productsById).map(k =>
+                                <div className="flex py-2 last:mb-0 first:pt-0" key={`${cartStore.productsById[k].product.name}-${cartStore.productsById[k].count}`}>
+                                  <img className="h-10 w-10 rounded-full" src="https://allopizza.su/storage/products/May2021/YbpXAH7TrUEmCblscUyP-medium.jpg" alt="" />
+                                  <div className="ml-3 w-72">
+                                    <p className="text-sm font-medium text-gray-900">{ cartStore.productsById[k].product.name } (x{ cartStore.productsById[k].count })</p>
+                                    <p className="text-sm text-gray-500">
+                                      { cartStore.productsById[k].product.price * cartStore.productsById[k].count } руб.</p>
+                                  </div>
+                                  <span className="relative z-0 inline-flex shadow-sm h-8 self-center rounded-md ml-auto">
+                                    <button type="button"
+                                            onClick={() => CartStore.editProductCount({
+                                              product: cartStore.productsById[k].product,
+                                              count: -1
+                                            })}
+                                            className="relative inline-flex items-center px-1 py-1 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                      <MinusIcon className="h-4 w-4" aria-hidden="true" />
+                                    </button>
+                                    <button type="button"
+                                            onClick={() => CartStore.editProductCount({
+                                              product: cartStore.productsById[k].product,
+                                              count: 1
+                                            })}
+                                            className="-ml-px relative inline-flex items-center px-1 py-1 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                      <PlusIcon className="h-4 w-4" aria-hidden="true" />
+                                    </button>
+                                  </span>
+                                  <TrashIcon className="h-6 w-6 text-gray-500 ml-1.5 hover:text-red-900 hover:opacity-70 cursor-pointer self-center"
+                                             onClick={() => CartStore.deleteProduct(cartStore.productsById[k].product.id)} />
+                                </div>)
+                              : <div className="p-2 w-72">Корзина пуста</div> }
+                            { cartStore.size > 0 &&
+                              <Popover.Button className="w-full">
+                                <button onClick={routes.order().push}
+                                        className="flex items-center justify-center w-full px-4 py-2 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                  Оформить
+                                </button>
+                              </Popover.Button> }
+                          </Popover.Panel>
+                        </Transition>
+                      </div>
+                    </>
+                  ) }
+                </Popover>
+
+              </div>
               <div className="flex items-center lg:hidden">
                 <Disclosure.Button className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
                   { open ? (
@@ -119,17 +188,6 @@ export const Navbar: React.FC = () => {
                                        'block px-4 py-2 text-sm text-gray-700'
                                      )}>
                                     Профиль
-                                  </a>
-                                ) }
-                              </Menu.Item>
-                              <Menu.Item>
-                                { ({ active }) => (
-                                  <a href="#"
-                                     className={c(
-                                       active ? 'bg-gray-100' : '',
-                                       'block px-4 py-2 text-sm text-gray-700'
-                                     )}>
-                                    Настройки
                                   </a>
                                 ) }
                               </Menu.Item>

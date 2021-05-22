@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRoute } from 'router';
-import { Products, Profile } from 'views/pages';
+import { Order, OrderFinished, Products, Profile } from 'views/pages';
 
 export const Main: React.FC = () => {
   const { name } = useRoute();
@@ -11,6 +11,8 @@ export const Main: React.FC = () => {
         { name === 'home' && <Products /> }
         { name === 'all' && <Products /> }
         { name === 'profile' && <Profile /> }
+        { name === 'order' && <Order /> }
+        { name === 'orderFinished' && <OrderFinished /> }
       </div>
     </>
   );

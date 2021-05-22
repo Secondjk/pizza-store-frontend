@@ -1,5 +1,5 @@
 import { http, validateObj } from 'api/http';
-import { AccessToken } from 'api/models/AcessToken';
+import { AccessToken } from 'api/models/AccessToken';
 import { AxiosResponse } from 'axios';
 import { Auth } from 'utils/Auth';
 import { UserStore } from 'stores/UserStore';

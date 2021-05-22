@@ -13,4 +13,3 @@ export const Product = object({
 }, { allowUnknown: true, collectErrors: true });
 
 export type Product = Infer<typeof Product>;
-export type ProductWithCounter = { product: Product; count: number };

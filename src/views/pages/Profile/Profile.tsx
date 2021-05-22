@@ -5,21 +5,22 @@ import { CheckCircleIcon } from '@heroicons/react/outline';
 import { trackPromise, usePromiseTracker } from 'react-promise-tracker';
 import { Spinner } from 'components';
 import { c } from 'utils/classNames';
-import { UserService } from 'api/services/UserService';
 
 export const Profile: React.FC = () => {
   const [userData, setUserData] = useState<User>({} as User);
   const [successfulSave, setSuccessfulSaveState] = useState<boolean>(false);
-  const changeValue = (key: keyof User, value: User[keyof User]) => setUserData({ ...userData, [key]: value });
+  const [allowSave, setAllowSave] = useState<boolean>(false);
+  const changeValue = (key: keyof User, value: User[keyof User]) => {
+    setAllowSave(true);
+    setUserData({ ...userData, [key]: value });
+  };
 
   const { promiseInProgress } = usePromiseTracker({ area: 'profile', delay: 200 });
 
   useEffect(() => {
     (async () => {
       const user = UserStore.getState().user
-        ?? UserStore.setUser(
-          await trackPromise(UserService.getCurrentUser(), 'profile')
-        );
+        ?? await UserStore.loadUser({});
 
       setUserData(user);
     })();
@@ -108,7 +109,7 @@ export const Profile: React.FC = () => {
                             </div>
                             <div className="col-span-3">
                               <label htmlFor="phone_number"
-                                     className="block text-sm font-medium text-gray-700">
+                                     className="block text-sm font-medium text-gray-700 mb-1">
                                 Номер телефона
                               </label>
                               <input type="tel"
@@ -178,8 +179,10 @@ export const Profile: React.FC = () => {
                             <span className="ml-3">Обновление данных профиля прошло успешно</span>
                           </span> }
                           <button type="submit"
-                                  className={c('inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500',
-                                    promiseInProgress ? 'bg-indigo-300 hover:bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700' )}>
+                                  disabled={!allowSave}
+                                  className={c('inline-flex disabled:opacity-20 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500',
+                                    promiseInProgress ? 'bg-indigo-300 hover:bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700',
+                                    !allowSave && 'cursor-default')}>
                             { promiseInProgress && <Spinner className="h-5 w-5 mr-3 text-indigo-400" /> }
                             Сохранить
                           </button>

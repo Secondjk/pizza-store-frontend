@@ -11,7 +11,7 @@ interface UserStoreData {
 interface UserStore extends Store<UserStoreData> {
   setUser: Event<User>
   setAuthorized: Event<boolean>
-  loadUser: Effect<never, User> // TODO: WTF PARAMS
+  loadUser: Effect<unknown, User>
   updateUser: Effect<User, User>
 }
 
@@ -39,7 +39,7 @@ export const UserStore: UserStore = (() => {
     };
   });
 
-  store.loadUser = createEffect<never, User>(async () => {
+  store.loadUser = createEffect<unknown, User>(async () => {
     const user = await UserService.getCurrentUser();
     store.setUser(user);
 

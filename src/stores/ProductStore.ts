@@ -8,12 +8,14 @@ type SortOption = { sortBy: ProductSortLiteral; direction: SortDirection };
 
 interface ProductStoreData {
   products: Product[]
+  defaultProducts: Product[]
   nameFilter: string
   typeFilter: TypeFilterLiteral
 }
 
 interface ProductStore extends Store<ProductStoreData> {
   setProducts: Event<Product[]>
+  setDefaultProducts: Event<Product[]>
   setNameFilter: Event<string>
   setTypeFilter: Event<TypeFilterLiteral>
   loadProducts: Effect<SortOption, Product[]>
@@ -22,6 +24,7 @@ interface ProductStore extends Store<ProductStoreData> {
 export const ProductStore: ProductStore = (() => {
   const store = createStore<ProductStoreData>({
     products: [],
+    defaultProducts: [],
     nameFilter: '',
     typeFilter: 'unset'
   }) as ProductStore;
@@ -33,7 +36,7 @@ export const ProductStore: ProductStore = (() => {
   store.on(store.setNameFilter, (s, p) => ({
     ...s,
     nameFilter: p,
-    products: p === '' ? s.products : s.products?.filter(product =>
+    products: p === '' ? s.defaultProducts : s.products?.filter(product =>
       product.name.toLowerCase().includes(p.toLowerCase()))
   }));
 
@@ -41,13 +44,20 @@ export const ProductStore: ProductStore = (() => {
   store.on(store.setTypeFilter, (s, p) => ({
     ...s,
     typeFilter: p,
-    products: p === 'unset' ? s.products : s.products?.filter(product =>
+    products: p === 'unset' ? s.defaultProducts : s.products?.filter(product =>
       product.name.toLowerCase().includes(p.toLowerCase()))
   }));
 
-  store.loadProducts = createEffect<SortOption, Product[]>(async ({ sortBy, direction }) => {
+  store.setDefaultProducts = createEvent<Product[]>();
+  store.on(store.setDefaultProducts, (s, p) => ({
+    ...s,
+    defaultProducts: p
+  }));
+
+  store.loadProducts = createEffect<SortOption, Product[]>(async ({ sortBy = 'isPopular', direction = 'asc' }) => {
     const products = await ProductService.getAllProducts(sortBy, direction);
     store.setProducts(products);
+    store.setDefaultProducts(products);
     store.setTypeFilter(store.getState().typeFilter);
     store.setNameFilter(store.getState().nameFilter);
 

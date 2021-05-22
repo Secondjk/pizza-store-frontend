@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { MinusIcon, PlusIcon, XIcon } from '@heroicons/react/solid';
 import { Product } from 'api/models/Product';
-import { trackPromise } from 'react-promise-tracker';
-import { ProductService } from 'api/services/ProductService';
 import { ProductStore } from 'stores/ProductStore';
 import { ProductTypeLiteral } from 'api/models/ProductType';
+import { useStore } from 'effector-react';
+import { CartStore } from 'stores/CartStore';
 
-type CounterWithId = { id: number; count: number };
+export type CounterWithId = { id: number; count: number };
 
 export const Products: React.FC = () => {
   const [productsCounts, setProductsCounts] = useState<CounterWithId[]>([]);
@@ -18,16 +18,18 @@ export const Products: React.FC = () => {
       const newProducts = s.slice();
       productsCounts[index].count = plus
         ? productsCounts[index].count + 1
-        : Math.max(productsCounts[index].count - 1, 0);
+        : Math.max(productsCounts[index].count - 1, 1);
 
       return newProducts;
     }
   );
 
+  const productStore = useStore(ProductStore);
+
   const mapTypeToProducts: { [key in ProductTypeLiteral]: Product[] } = {
-    PIZZA: ProductStore.getState().products.filter(({ productType }) => productType.name === 'PIZZA'),
-    SALADS: ProductStore.getState().products.filter(({ productType }) => productType.name === 'SALADS'),
-    BEVERAGES: ProductStore.getState().products.filter(({ productType }) => productType.name === 'BEVERAGES')
+    PIZZA: productStore.products.filter(({ productType }) => productType.name === 'PIZZA'),
+    SALADS: productStore.products.filter(({ productType }) => productType.name === 'SALADS'),
+    BEVERAGES: productStore.products.filter(({ productType }) => productType.name === 'BEVERAGES')
   };
 
   const mapTypeToName: { [key in ProductTypeLiteral]: string } = {
@@ -38,9 +40,7 @@ export const Products: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      const products = ProductStore.setProducts(
-        await trackPromise(ProductService.getAllProducts(), 'products')
-      );
+      const products = await ProductStore.loadProducts({ sortBy: 'isPopular', direction: 'asc' });
 
       setProductsCounts(products.map(p => ({ id: p.id, count: 1 })));
     })();
@@ -63,7 +63,7 @@ export const Products: React.FC = () => {
                   className="col-span-1 flex flex-col bg-white rounded-lg xl:shadow-md">
                 <div className="flex-1 flex flex-col p-6 pb-0">
                   <img className="w-54 h-54 flex-shrink-0 mx-auto bg-black"
-                       src="https://allopizza.su/storage/products/April2021/W2snxt3BStLFfBgquurN-medium.jpg" alt="" />
+                       src="https://allopizza.su/storage/products/May2021/YbpXAH7TrUEmCblscUyP-medium.jpg" alt="" />
                   <h3 className="mt-6 text-gray-900 text-md text-center font-medium">{ product.name }</h3>
                 </div>
                 <div>
@@ -87,6 +87,7 @@ export const Products: React.FC = () => {
                         </button>
                       </div>
                       <button type="button"
+                              onClick={() => CartStore.editProductCount({ product, count: getCountById(product.id) ?? 1 })}
                               className="inline-flex w-full items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <span className="text-center w-full">Добавить в корзину</span>
                       </button>
