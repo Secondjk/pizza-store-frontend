@@ -11,6 +11,7 @@ interface CartStoreData {
 interface CartStore extends Store<CartStoreData> {
   editProductCount: Event<ProductWithCount>
   deleteProduct: Event<number>
+  clearCart: Event<unknown>
 }
 
 export const CartStore: CartStore = (() => {
@@ -42,6 +43,13 @@ export const CartStore: CartStore = (() => {
       size: s.size - countOfDeletedProduct
     };
   });
+
+  store.clearCart = createEvent<unknown>();
+  store.on(store.clearCart, s => ({
+    ...s,
+    productsById: {},
+    size: 0
+  }));
 
   store.watch(store.editProductCount, s =>
     Object.keys(s.productsById)

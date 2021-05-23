@@ -6,6 +6,8 @@ import { CartStore } from 'stores/CartStore';
 import { MinusIcon, PlusIcon } from '@heroicons/react/solid';
 import { UserStore } from 'stores/UserStore';
 import { routes } from 'router';
+import { Auth } from 'utils/Auth';
+import { UserService } from 'api/services/UserService';
 
 export interface Address {
   deliveryAddress: string
@@ -118,7 +120,12 @@ export const Order: React.FC = () => {
             </div>
           </div>
         </div>
-        <form>
+        <form onSubmit={async e => {
+          e.preventDefault();
+          UserService.order({ totalPrice });
+          await UserStore.loadUser({});
+          CartStore.clearCart({});
+          routes.orderFinished().push(); }}>
           <div className="grid grid-cols-5">
             <div className="w-full sm:px-6 lg:px-8 col-span-3">
               <div className="px-4 sm:px-0">
@@ -135,7 +142,7 @@ export const Order: React.FC = () => {
                                     onChange={e => setAddress(e.target.value as 'standard' | 'new')}
                                     name="address"
                                     className="focus:ring-indigo-500 focus:border-indigo-500 relative block w-full rounded-none rounded-t-md bg-transparent focus:z-10 sm:text-sm border-gray-300">
-                              <option value="standard">Стандартный адрес доставки</option>
+                              <option value="standard" disabled={!Auth.getIsAuthorized()}>Стандартный адрес доставки</option>
                               <option value="new">Новый адрес</option>
                             </select>
                           </div>
@@ -235,7 +242,7 @@ export const Order: React.FC = () => {
                         </div>
                       </fieldset>
                       <button type="submit"
-                              onClick={e => { e.preventDefault(); routes.orderFinished().push(); }}
+                              disabled={totalPrice === 0}
                               className="flex mt-6 items-center justify-center  self-end w-full px-4 py-2 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Оплатить заказ
                       </button>
